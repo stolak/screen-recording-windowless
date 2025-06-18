@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 
 let isRecording = false;
 let savedPath = null;
@@ -6,6 +7,7 @@ let stopCallback = null;
 
 function startServer(mainWindow) {
   const app = express();
+  app.use(cors()); 
   app.use(express.json());
 
   app.post('/start', (req, res) => {

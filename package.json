@@ -2,11 +2,23 @@
   "name": "windowless",
   "version": "1.0.0",
   "main": "main.js",
+  "description": "Automatic screen recording and uploading to a server",
+  "author": "Stephen Akinbobola",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-window": "electron-packager . windowless --platform=win32 --arch=x64 --out=dist --overwrite",
+    "build-mac": "electron-packager . windowless --platform=darwin --arch=x64 --out=dist --overwrite",
+    "build-linux": "electron-packager . windowless --platform=linux --arch=x64 --out=dist --overwrite"
+  
   },
   "dependencies": {
-    "electron": "^29.0.0",
+    "cors": "^2.8.5",
     "express": "^4.18.2"
+    
+  },"devDependencies": {
+    "electron": "^29.0.0",
+    "electron-packager": "^15.5.0",
+    "electron-builder": "^23.6.0"
   }
 }
