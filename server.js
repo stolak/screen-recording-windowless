@@ -8,6 +8,7 @@ const FormData = require('form-data'); // Add this for multipart upload
 let isRecording = false;
 let savedPath = null;
 let stopCallback = null;
+let uploadMeta = {};
 
 function startServer(mainWindow) {
   const app = express();
@@ -28,9 +29,15 @@ function startServer(mainWindow) {
     res.json({ status: 'started' });
   });
 
-  app.post('/stop', (_req, res) => {
+  app.post('/stop', (req, res) => {
     if (!isRecording) return res.status(400).json({ error: 'Not recording' });
     if (stopCallback) return res.status(429).json({ error: 'A stop request is already in progress.' });
+
+    // Store interactionId and token for upload
+    uploadMeta = {
+      interactionId: req.body.interactionId,
+      token: req.body.token,
+    };
 
     mainWindow.webContents.send('stop-recording');
 
@@ -48,30 +55,9 @@ function startServer(mainWindow) {
     res.json({ recording: isRecording, file: savedPath });
   });
 
-  ipcMain.on('recording-saved', async (_e, filePath) => {
+  ipcMain.on('recording-saved', (_e, filePath) => {
     savedPath = filePath;
     isRecording = false;
-
-    // Automatically upload the file after saving (multipart/form-data)
-    try {
-      const form = new FormData();
-      form.append('file', fs.createReadStream(filePath), path.basename(filePath));
-      const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
-      const response = await fetch('http://localhost:3004/api/v1/upload-file', {
-        method: 'POST',
-        headers: form.getHeaders(),
-        body: form,
-      });
-      if (!response.ok) {
-        console.error('File upload failed:', response.statusText);
-      } else {
-        console.log('File uploaded successfully');
-        const responseData = await response.json();
-        console.log('Upload response:', responseData);
-      }
-    } catch (err) {
-      console.error('Error uploading file:', err);
-    }
 
     if (stopCallback) {
       clearTimeout(stopCallback.timeout);
@@ -81,12 +67,48 @@ function startServer(mainWindow) {
       });
       stopCallback = null;
     }
+
+    // Start upload in the background
+    uploadFileToServer(filePath, uploadMeta).catch(err => {
+      console.error('Background upload error:', err);
+    });
   });
 
   const PORT = 4571;
   app.listen(PORT, () => {
     console.log(`REST API running at http://localhost:${PORT}`);
   });
+}
+
+async function uploadFileToServer(filePath, meta) {
+  try {
+    const form = new FormData();
+    form.append('file', fs.createReadStream(filePath), path.basename(filePath));
+    if (meta.interactionId) {
+      form.append('interactionId', meta.interactionId);
+    }
+    const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
+    const headers = {
+      ...form.getHeaders(),
+    };
+    if (meta.token) {
+      headers['Authorization'] = `Bearer ${meta.token}`;
+    }
+    const response = await fetch('http://localhost:3004/api/v1/upload-file', {
+      method: 'POST',
+      headers,
+      body: form,
+    });
+    if (!response.ok) {
+      console.error('File upload failed:', response.statusText);
+    } else {
+      console.log('File uploaded successfully');
+      const responseData = await response.json();
+      console.log('Upload response:', responseData);
+    }
+  } catch (err) {
+    console.error('Error uploading file:', err);
+  }
 }
 
 module.exports = { startServer };
