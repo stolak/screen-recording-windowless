@@ -10,15 +10,16 @@
     "build-window": "electron-packager . windowless --platform=win32 --arch=x64 --out=dist --overwrite",
     "build-mac": "electron-packager . windowless --platform=darwin --arch=x64 --out=dist --overwrite",
     "build-linux": "electron-packager . windowless --platform=linux --arch=x64 --out=dist --overwrite"
-  
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.18.2"
-    
-  },"devDependencies": {
+    "express": "^4.18.2",
+    "form-data": "^4.0.3",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
     "electron": "^29.0.0",
-    "electron-packager": "^15.5.0",
-    "electron-builder": "^23.6.0"
+    "electron-builder": "^23.6.0",
+    "electron-packager": "^15.5.0"
   }
 }

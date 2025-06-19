@@ -1,5 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const { ipcMain } = require('electron');
+const fs = require('fs');
+const path = require('path');
+const FormData = require('form-data'); // Add this for multipart upload
 
 let isRecording = false;
 let savedPath = null;
@@ -44,16 +48,36 @@ function startServer(mainWindow) {
     res.json({ recording: isRecording, file: savedPath });
   });
 
-  const { ipcMain } = require('electron');
-  ipcMain.on('recording-saved', (_e, path) => {
-    savedPath = path;
+  ipcMain.on('recording-saved', async (_e, filePath) => {
+    savedPath = filePath;
     isRecording = false;
+
+    // Automatically upload the file after saving (multipart/form-data)
+    try {
+      const form = new FormData();
+      form.append('file', fs.createReadStream(filePath), path.basename(filePath));
+      const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
+      const response = await fetch('http://localhost:3004/api/v1/upload-file', {
+        method: 'POST',
+        headers: form.getHeaders(),
+        body: form,
+      });
+      if (!response.ok) {
+        console.error('File upload failed:', response.statusText);
+      } else {
+        console.log('File uploaded successfully');
+        const responseData = await response.json();
+        console.log('Upload response:', responseData);
+      }
+    } catch (err) {
+      console.error('Error uploading file:', err);
+    }
 
     if (stopCallback) {
       clearTimeout(stopCallback.timeout);
       stopCallback.res.json({
         status: 'saved',
-        file: path,
+        file: filePath,
       });
       stopCallback = null;
     }
