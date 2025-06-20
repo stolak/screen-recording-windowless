@@ -37,8 +37,10 @@ function startServer(mainWindow) {
     uploadMeta = {
       interactionId: req.body.interactionId,
       token: req.body.token,
+      url: req.body.url,
     };
 
+    console.log(uploadMeta)
     mainWindow.webContents.send('stop-recording');
 
     const timeout = setTimeout(() => {
@@ -94,7 +96,7 @@ async function uploadFileToServer(filePath, meta) {
     if (meta.token) {
       headers['Authorization'] = `Bearer ${meta.token}`;
     }
-    const response = await fetch('http://localhost:3004/api/v1/upload-file', {
+    const response = await fetch(`${meta.url}/api/v1/upload-file`, {
       method: 'POST',
       headers,
       body: form,
