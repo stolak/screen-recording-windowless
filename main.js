@@ -10,7 +10,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    show: true, // No UI
+    show: false, // No UI
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
