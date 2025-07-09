@@ -10,4 +10,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveRecording: (saveOptions) => {
     return ipcRenderer.invoke('electron:save-recording', saveOptions);
   },
+  setToken: (token) => ipcRenderer.invoke('electron:set-token', token),
+  setUrl: (url) => ipcRenderer.invoke('electron:set-url', url),
 });

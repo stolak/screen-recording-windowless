@@ -4,6 +4,11 @@ const { ipcMain } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data'); // Add this for multipart upload
+let Store;
+let storePromise = (async () => {
+  Store = (await import('electron-store')).default;
+  return new Store();
+})();
 
 let isRecording = false;
 let savedPath = null;
@@ -87,16 +92,27 @@ async function uploadFileToServer(filePath, meta) {
     const form = new FormData();
     form.append('file', fs.createReadStream(filePath), path.basename(filePath));
     if (meta.interactionId) {
+     
       form.append('interactionId', meta.interactionId);
+      form.append('title', meta.interactionId);
+      form.append('description', meta.interactionId);
     }
     const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
     const headers = {
       ...form.getHeaders(),
     };
-    if (meta.token) {
+    // Use authToken from store if it exists, otherwise use meta.token
+    const store = await storePromise;
+    const storedToken = store.get('authToken');
+    const storedUrl = store.get('url');
+
+    console.log("Store Data ", storedToken, storedUrl)
+    if (storedToken) {
+      headers['Authorization'] = `Bearer ${storedToken}`;
+    } else if (meta.token) {
       headers['Authorization'] = `Bearer ${meta.token}`;
     }
-    const response = await fetch(`${meta.url}/api/v1/upload-file`, {
+    const response = await fetch(storedUrl ? `${storedUrl}` : `${meta.url}/api/v1/upload-file`, {
       method: 'POST',
       headers,
       body: form,

@@ -80,3 +80,37 @@ window.electronAPI.onStopRecording(() => {
     mediaRecorder.stop();
   }
 });
+
+// Login form handling
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+  loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const url = document.getElementById('url').value;
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email:username, password }),
+      });
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      const data = await response.json();
+      if (data.token) {
+        await window.electronAPI.setToken(data.token);
+        await window.electronAPI.setUrl(url);
+        alert('Login successful!');
+        // Optionally, hide the form or redirect
+      } else {
+        throw new Error('Token not found in response');
+      }
+    } catch (error) {
+      alert('Login error: ' + error.message);
+    }
+  });
+}

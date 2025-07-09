@@ -3,6 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { startServer } = require('./server');
+let Store;
+let storePromise = (async () => {
+  Store = (await import('electron-store')).default;
+  return new Store();
+})();
 
 let mainWindow;
 
@@ -10,7 +15,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    show: false, // No UI
+    show: true, // No UI
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
@@ -49,4 +54,34 @@ ipcMain.handle('electron:save-recording', async (_event, { arrayBuffer, filename
   }
 });
 
-app.whenReady().then(createWindow);
+ipcMain.handle('electron:set-token', async (_event, token) => {
+  const store = await storePromise;
+  store.set('authToken', token);
+  console.log('Token set:', token);
+  return true;
+});
+
+ipcMain.handle('electron:set-url', async (_event, url) => {
+  const store = await storePromise;
+  store.set('url', url);
+  console.log('URL set:', url);
+  return true;
+});
+
+app.whenReady().then(() => {
+  createWindow();
+
+  // Enable auto-launch on login
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    path: app.getPath('exe'), // Only needed for Windows
+  });
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
