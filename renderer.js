@@ -6,6 +6,12 @@ let recordingOptions = {};
 let recordingStartTime = null;
 let recordingDuration = null;
 
+let Store;
+let storePromise = (async () => {
+  Store = (await import('electron-store')).default;
+  return new Store();
+})();
+
 window.electronAPI.onStartRecording(async (_event, options) => {
   console.log('[Renderer] Start recording triggered with options:', options);
   recordingOptions = options;
@@ -79,7 +85,7 @@ window.electronAPI.onStartRecording(async (_event, options) => {
           durationMsg.textContent = `Your last screen recording is ${recordingDuration} seconds`;
           durationMsg.style.display = 'block';
         } else {
-          console.warn('recording-duration-msg element not found in DOM.');
+         
         }
       }
     };
@@ -105,6 +111,10 @@ if (loginForm) {
     event.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    // const store = await storePromise;
+    // const savedSettings = store.get('setting');
+
+    // console.log("Debugging 5", savedSettings);
     try {
       const response = await fetch('http://localhost:3000/api/auth/signin', {
         method: 'POST',
@@ -133,3 +143,5 @@ if (loginForm) {
     }
   });
 }
+
+

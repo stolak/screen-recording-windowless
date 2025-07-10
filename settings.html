@@ -7,7 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      background: #f8f9fa;
+     
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -33,20 +33,39 @@
     <div class="settings-title">Settings</div>
     <form id="settings-form">
       <div class="mb-3">
-        <label for="url" class="form-label">URL</label>
-        <input type="text" id="url" name="url" class="form-control" required>
+        <label for="loginurl" class="form-label">Login Endpoint URL</label>
+        <input type="text" id="loginurl" name="loginurl" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="imageurl" class="form-label">Image Endpoint URL</label>
+        <input type="text" id="imageurl" name="imageurl" class="form-control" required>
       </div>
       <button type="submit" class="btn btn-success w-100">Save</button>
     </form>
   </div>
   <script>
+    // On page load, set the #url input value from the query string if present
+    const params = new URLSearchParams(window.location.search);
+    const imageurl = params.get('imageurl');
+    const loginurl = params.get('loginurl');
+    if (imageurl) {
+      document.getElementById('imageurl').value = imageurl;
+    }
+     if (loginurl) {
+      document.getElementById('loginurl').value = loginurl;
+    }
     document.getElementById('settings-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const url = document.getElementById('url').value;
-      await window.electronAPI.setUrl(url);
-      alert('URL saved!');
+
+      const setting= {
+        loginurl: document.getElementById('loginurl').value,
+        imageurl: document.getElementById('imageurl').value
+      };
+      // const url = document.getElementById('url').value;
+      await window.electronAPI.setSetting(setting);
+      alert('Setting saved!');
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html> 
+</html>

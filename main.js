@@ -35,8 +35,17 @@ function createWindow() {
     },
     {
       label: 'Settings',
-      click: () => {
-        mainWindow.loadFile('settings.html');
+      click: async () => {
+        const store = await storePromise;
+        // const savedUrl = store.get('url');
+        const savedSettings = store.get('setting');
+        console.log('clelelelelSaved URL:', savedSettings);
+        if (savedSettings) {
+          console.log('Loading settings with saved URL:', savedSettings);
+          mainWindow.loadFile('settings.html', { query: savedSettings });
+        } else {
+          mainWindow.loadFile('settings.html');
+        }
       },
     },
   ];
@@ -83,6 +92,13 @@ ipcMain.handle('electron:set-url', async (_event, url) => {
   const store = await storePromise;
   store.set('url', url);
   console.log('URL set:', url);
+  return true;
+});
+
+ipcMain.handle('electron:set-setting', async (_event, setting) => {
+  const store = await storePromise;
+  store.set('setting', setting);
+  console.log('setting set:', setting);
   return true;
 });
 
