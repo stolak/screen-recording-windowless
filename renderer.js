@@ -75,13 +75,12 @@ window.electronAPI.onStartRecording(async (_event, options) => {
         window.electronAPI.sendRecordingStopped({ duration: recordingDuration });
         // Display duration on the home page
         let durationMsg = document.getElementById('recording-duration-msg');
-        if (!durationMsg) {
-          durationMsg = document.createElement('div');
-          durationMsg.id = 'recording-duration-msg';
-          durationMsg.style.marginTop = '20px';
-          document.body.appendChild(durationMsg);
+        if (durationMsg) {
+          durationMsg.textContent = `Your last screen recording is ${recordingDuration} seconds`;
+          durationMsg.style.display = 'block';
+        } else {
+          console.warn('recording-duration-msg element not found in DOM.');
         }
-        durationMsg.textContent = `Your last screen recording is ${recordingDuration} seconds`;
       }
     };
 
