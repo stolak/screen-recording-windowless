@@ -3,10 +3,13 @@ console.log('[Renderer] Script loaded');
 let mediaRecorder;
 let recordedChunks = [];
 let recordingOptions = {};
+let recordingStartTime = null;
+let recordingDuration = null;
 
 window.electronAPI.onStartRecording(async (_event, options) => {
   console.log('[Renderer] Start recording triggered with options:', options);
   recordingOptions = options;
+  recordingStartTime = Date.now();
 
   try {
     const sources = await window.electronAPI.getDesktopSources();
@@ -66,6 +69,20 @@ window.electronAPI.onStartRecording(async (_event, options) => {
       } else {
         console.error('[Recorder] Failed to save file.');
       }
+      if (recordingStartTime) {
+        recordingDuration = Math.floor((Date.now() - recordingStartTime) / 1000);
+        console.log('Recording duration (seconds):', recordingDuration);
+        window.electronAPI.sendRecordingStopped({ duration: recordingDuration });
+        // Display duration on the home page
+        let durationMsg = document.getElementById('recording-duration-msg');
+        if (!durationMsg) {
+          durationMsg = document.createElement('div');
+          durationMsg.id = 'recording-duration-msg';
+          durationMsg.style.marginTop = '20px';
+          document.body.appendChild(durationMsg);
+        }
+        durationMsg.textContent = `Your last screen recording is ${recordingDuration} seconds`;
+      }
     };
 
     mediaRecorder.start();
@@ -85,10 +102,10 @@ window.electronAPI.onStopRecording(() => {
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
   loginForm.addEventListener('submit', async (event) => {
+    console.log("Debugging 4");
     event.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    const url = document.getElementById('url').value;
     try {
       const response = await fetch('http://localhost:3000/api/auth/signin', {
         method: 'POST',
@@ -103,9 +120,12 @@ if (loginForm) {
       const data = await response.json();
       if (data.token) {
         await window.electronAPI.setToken(data.token);
-        await window.electronAPI.setUrl(url);
-        alert('Login successful!');
-        // Optionally, hide the form or redirect
+        // Hide the form and show login message
+        loginForm.style.display = 'none';
+        const msg = document.createElement('div');
+        msg.textContent = 'You are login';
+        msg.style.marginTop = '20px';
+        loginForm.parentNode.appendChild(msg);
       } else {
         throw new Error('Token not found in response');
       }

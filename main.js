@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -24,6 +24,24 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
   startServer(mainWindow);
+
+  // Set up menu
+  const menuTemplate = [
+    {
+      label: 'Home',
+      click: () => {
+        mainWindow.loadFile('index.html');
+      },
+    },
+    {
+      label: 'Settings',
+      click: () => {
+        mainWindow.loadFile('settings.html');
+      },
+    },
+  ];
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 }
 
 ipcMain.handle('electron:get-desktop-sources', async () => {
@@ -66,6 +84,10 @@ ipcMain.handle('electron:set-url', async (_event, url) => {
   store.set('url', url);
   console.log('URL set:', url);
   return true;
+});
+
+ipcMain.on('recording-stopped', (_event, data) => {
+  global.lastRecordingDuration = data.duration;
 });
 
 app.whenReady().then(() => {

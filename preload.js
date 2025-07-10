@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   setToken: (token) => ipcRenderer.invoke('electron:set-token', token),
   setUrl: (url) => ipcRenderer.invoke('electron:set-url', url),
+  sendRecordingStopped: (data) => ipcRenderer.send('recording-stopped', data),
 });

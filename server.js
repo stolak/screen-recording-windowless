@@ -43,6 +43,7 @@ function startServer(mainWindow) {
       interactionId: req.body.interactionId,
       token: req.body.token,
       url: req.body.url,
+      duration: global.lastRecordingDuration, // add duration from main process
     };
 
     console.log(uploadMeta)
@@ -96,6 +97,11 @@ async function uploadFileToServer(filePath, meta) {
       form.append('interactionId', meta.interactionId);
       form.append('title', meta.interactionId);
       form.append('description', meta.interactionId);
+      // add the recording duration here as well
+    }
+    if (global.lastRecordingDuration) {
+      form.append('duration',global.lastRecordingDuration);
+      console.log("Duration in seever",global.lastRecordingDuration)
     }
     const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
     const headers = {

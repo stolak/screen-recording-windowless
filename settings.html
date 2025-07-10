@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .settings-container {
+      background: #fff;
+      padding: 2.5rem 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      min-width: 340px;
+    }
+    .settings-title {
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #343a40;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-title">Settings</div>
+    <form id="settings-form">
+      <div class="mb-3">
+        <label for="url" class="form-label">URL</label>
+        <input type="text" id="url" name="url" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-success w-100">Save</button>
+    </form>
+  </div>
+  <script>
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = document.getElementById('url').value;
+      await window.electronAPI.setUrl(url);
+      alert('URL saved!');
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
