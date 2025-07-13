@@ -10,6 +10,7 @@ let storePromise = (async () => {
 })();
 
 let mainWindow;
+let lastRecordingDuration = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -23,7 +24,7 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
-  startServer(mainWindow);
+  startServer(mainWindow, () => lastRecordingDuration);
 
   // Set up menu
   const menuTemplate = [
@@ -103,7 +104,7 @@ ipcMain.handle('electron:set-setting', async (_event, setting) => {
 });
 
 ipcMain.on('recording-stopped', (_event, data) => {
-  global.lastRecordingDuration = data.duration;
+  lastRecordingDuration = data.duration;
 });
 ipcMain.handle('electron:get-store-value', async (_event, key) => {
   const store = await storePromise;

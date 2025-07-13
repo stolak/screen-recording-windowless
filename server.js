@@ -15,7 +15,7 @@ let savedPath = null;
 let stopCallback = null;
 let uploadMeta = {};
 
-function startServer(mainWindow) {
+function startServer(mainWindow, getDuration) {
   const app = express();
   app.use(cors()); 
   app.use(express.json());
@@ -43,10 +43,10 @@ function startServer(mainWindow) {
       interactionId: req.body.interactionId,
       token: req.body.token,
       url: req.body.url,
-      duration: global.lastRecordingDuration, // add duration from main process
+      duration: getDuration ? getDuration() : null, // add duration from main process
     };
 
-    console.log(uploadMeta)
+    
     mainWindow.webContents.send('stop-recording');
 
     const timeout = setTimeout(() => {
@@ -63,6 +63,11 @@ function startServer(mainWindow) {
     res.json({ recording: isRecording, file: savedPath });
   });
 
+  app.get('/last-duration', (_req, res) => {
+    console.log("getDuration", getDuration)
+    res.json({ duration: getDuration ? getDuration() : null });
+  });
+
   ipcMain.on('recording-saved', (_e, filePath) => {
     savedPath = filePath;
     isRecording = false;
@@ -77,6 +82,8 @@ function startServer(mainWindow) {
     }
 
     // Start upload in the background
+    uploadMeta.duration = getDuration ? getDuration() : null;
+    console.log("uploadMeta", uploadMeta)
     uploadFileToServer(filePath, uploadMeta).catch(err => {
       console.error('Background upload error:', err);
     });
@@ -97,11 +104,11 @@ async function uploadFileToServer(filePath, meta) {
       form.append('interactionId', meta.interactionId);
       form.append('title', meta.interactionId);
       form.append('description', meta.interactionId);
-      // add the recording duration here as well
     }
-    if (global.lastRecordingDuration) {
-      form.append('duration',global.lastRecordingDuration);
-      console.log("Duration in seever",global.lastRecordingDuration)
+    // Add the recording duration if present
+    if (meta.duration) {
+      form.append('duration', meta.duration);
+      console.log('Duration in server', meta.duration);
     }
     const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
     const headers = {
@@ -112,12 +119,13 @@ async function uploadFileToServer(filePath, meta) {
     const storedToken = store.get('authToken');
     const storedUrl = store.get('setting')?.imageurl || meta.url;
 
-    console.log("Store Data ", storedToken, storedUrl)
+    // console.log("Store Data ", storedToken, storedUrl)
     if (storedToken) {
       headers['Authorization'] = `Bearer ${storedToken}`;
     } else if (meta.token) {
       headers['Authorization'] = `Bearer ${meta.token}`;
     }
+  
     const response = await fetch(storedUrl ? `${storedUrl}` : `${meta.url}/api/v1/upload-file`, {
       method: 'POST',
       headers,
