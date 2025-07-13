@@ -111,12 +111,10 @@ if (loginForm) {
     event.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    // const store = await storePromise;
-    // const savedSettings = store.get('setting');
-
-    // console.log("Debugging 5", savedSettings);
+    const savedSettings = await window.electronAPI.getStoreValue('setting');
+    console.log("Debugging 5", savedSettings);
     try {
-      const response = await fetch('http://localhost:3000/api/auth/signin', {
+      const response = await fetch(savedSettings?.signinUrl || 'http://localhost:3000/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

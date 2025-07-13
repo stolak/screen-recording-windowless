@@ -105,6 +105,16 @@ ipcMain.handle('electron:set-setting', async (_event, setting) => {
 ipcMain.on('recording-stopped', (_event, data) => {
   global.lastRecordingDuration = data.duration;
 });
+ipcMain.handle('electron:get-store-value', async (_event, key) => {
+  const store = await storePromise;
+  return store.get(key);
+});
+
+ipcMain.handle('electron:set-store-value', async (_event, key, value) => {
+  const store = await storePromise;
+  store.set(key, value);
+  return true;
+});
 
 app.whenReady().then(() => {
   createWindow();
