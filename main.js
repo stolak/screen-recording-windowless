@@ -104,6 +104,7 @@ ipcMain.handle('electron:set-setting', async (_event, setting) => {
 });
 
 ipcMain.on('recording-stopped', (_event, data) => {
+  console.log('Received duration:', data.duration);
   lastRecordingDuration = data.duration;
 });
 ipcMain.handle('electron:get-store-value', async (_event, key) => {

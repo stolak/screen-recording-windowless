@@ -72,6 +72,17 @@ function startServer(mainWindow, getDuration) {
     savedPath = filePath;
     isRecording = false;
 
+    // DEBUG: Trace getDuration and its value
+    console.log('getDuration function:', typeof getDuration, getDuration);
+    let durationValue = null;
+    try {
+      durationValue = getDuration ? getDuration() : null;
+    } catch (err) {
+      console.error('Error calling getDuration:', err);
+    }
+    uploadMeta.duration = durationValue;
+    console.log('uploadMeta', uploadMeta);
+
     if (stopCallback) {
       clearTimeout(stopCallback.timeout);
       stopCallback.res.json({
@@ -82,8 +93,6 @@ function startServer(mainWindow, getDuration) {
     }
 
     // Start upload in the background
-    uploadMeta.duration = getDuration ? getDuration() : null;
-    console.log("uploadMeta", uploadMeta)
     uploadFileToServer(filePath, uploadMeta).catch(err => {
       console.error('Background upload error:', err);
     });
