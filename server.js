@@ -25,9 +25,7 @@ function startServer(mainWindow, getDuration) {
     if (isRecording) return res.status(400).json({ error: 'Already recording' });
 
     const { filename, path: savePath } = req.body;
-    if (!filename) {
-      return res.status(400).json({ error: 'Filename is required' });
-    }
+   
 
     mainWindow.webContents.send('start-recording', { filename, savePath });
     isRecording = true;

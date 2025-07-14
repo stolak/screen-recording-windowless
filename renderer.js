@@ -13,8 +13,24 @@ let storePromise = (async () => {
 })();
 
 window.electronAPI.onStartRecording(async (_event, options) => {
-  console.log('[Renderer] Start recording triggered with options:', options);
-  recordingOptions = options;
+  // Set defaults for filename and path if not provided
+  let filename = options.filename;
+  let savePath = options.path;
+  if (!filename) {
+    const now = new Date();
+    const pad = n => n.toString().padStart(2, '0');
+    filename = `recording-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.webm`;
+  }
+  if (!savePath) {
+    // Use Electron's API to get Desktop path if available, else fallback
+    if (window.electronAPI && window.electronAPI.getDesktopPath) {
+      let desktopPath = await window.electronAPI.getDesktopPath();
+      savePath = `${desktopPath}${desktopPath.endsWith('/') || desktopPath.endsWith('\\') ? '' : (desktopPath.includes('\\') ? '\\' : '/') }screen-recorder`;
+    } else {
+      savePath = '';
+    }
+  }
+  recordingOptions = { ...options, filename, path: savePath };
   recordingStartTime = Date.now();
 
   try {
