@@ -126,7 +126,8 @@ async function uploadFileToServer(filePath, meta) {
     // Use authToken from store if it exists, otherwise use meta.token
     const store = await storePromise;
     const storedToken = store.get('authToken');
-    const storedUrl = store.get('setting')?.imageurl || meta.url;
+    console.log("Stored Token", storedToken)
+    const storedUrl = store.get('setting')?.videourl || meta.url;
 
     // console.log("Store Data ", storedToken, storedUrl)
     if (storedToken) {

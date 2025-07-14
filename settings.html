@@ -37,8 +37,8 @@
         <input type="text" id="loginurl" name="loginurl" class="form-control" required>
       </div>
       <div class="mb-3">
-        <label for="imageurl" class="form-label">Image Endpoint URL</label>
-        <input type="text" id="imageurl" name="imageurl" class="form-control" required>
+        <label for="videourl" class="form-label">Image Endpoint URL</label>
+        <input type="text" id="videourl" name="videourl" class="form-control" required>
       </div>
       <button type="submit" class="btn btn-success w-100">Save</button>
     </form>
@@ -46,10 +46,10 @@
   <script>
     // On page load, set the #url input value from the query string if present
     const params = new URLSearchParams(window.location.search);
-    const imageurl = params.get('imageurl');
+    const videourl = params.get('videourl');
     const loginurl = params.get('loginurl');
-    if (imageurl) {
-      document.getElementById('imageurl').value = imageurl;
+    if (videourl) {
+      document.getElementById('videourl').value = videourl;
     }
      if (loginurl) {
       document.getElementById('loginurl').value = loginurl;
@@ -59,7 +59,7 @@
 
       const setting= {
         loginurl: document.getElementById('loginurl').value,
-        imageurl: document.getElementById('imageurl').value
+        videourl: document.getElementById('videourl').value
       };
       // const url = document.getElementById('url').value;
       await window.electronAPI.setSetting(setting);

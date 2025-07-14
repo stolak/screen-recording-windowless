@@ -116,7 +116,7 @@ if (loginForm) {
     const savedSettings = await window.electronAPI.getStoreValue('setting');
     console.log("Debugging 5", savedSettings);
     try {
-      const response = await fetch(savedSettings?.signinUrl || 'http://localhost:3000/api/auth/signin', {
+      const response = await fetch(savedSettings?.loginurl || 'http://localhost:3002/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +139,9 @@ if (loginForm) {
         throw new Error('Token not found in response');
       }
     } catch (error) {
-      alert('Login error: ' + error.message);
+      alert('Login error: ' + error.message+ savedSettings?.loginurl);
+    }finally{
+      alert(savedSettings);
     }
   });
 }
