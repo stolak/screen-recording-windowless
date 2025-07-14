@@ -20,6 +20,7 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
+      devTools: true,
     },
   });
 
@@ -49,6 +50,20 @@ function createWindow() {
         }
       },
     },
+    ,
+  {
+    label: 'Debug',
+    submenu: [
+      {
+        label: 'Toggle Developer Tools',
+        accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+        click: () => {
+          mainWindow.webContents.toggleDevTools();
+        },
+      },
+      { role: 'reload' },
+    ],
+  },
   ];
   const menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
