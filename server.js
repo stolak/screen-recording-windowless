@@ -4,6 +4,7 @@ const { ipcMain } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data'); // Add this for multipart upload
+const { title } = require('process');
 let Store;
 let storePromise = (async () => {
   Store = (await import('electron-store')).default;
@@ -42,6 +43,8 @@ function startServer(mainWindow, getDuration) {
     uploadMeta = {
       interactionId: req.body.interactionId,
       token: req.body.token,
+      title: req.body.title || 'Screen Recording',
+      description: req.body.description || 'Screen recording uploaded from Electron app',
       url: req.body.url,
       duration: getDuration ? getDuration() : null, // add duration from main process
     };
@@ -64,7 +67,6 @@ function startServer(mainWindow, getDuration) {
   });
 
   app.get('/last-duration', (_req, res) => {
-    console.log("getDuration", getDuration)
     res.json({ duration: getDuration ? getDuration() : null });
   });
 
@@ -72,8 +74,6 @@ function startServer(mainWindow, getDuration) {
     savedPath = filePath;
     isRecording = false;
 
-    // DEBUG: Trace getDuration and its value
-    console.log('getDuration function:', typeof getDuration, getDuration);
     let durationValue = null;
     try {
       durationValue = getDuration ? getDuration() : null;
@@ -81,7 +81,7 @@ function startServer(mainWindow, getDuration) {
       console.error('Error calling getDuration:', err);
     }
     uploadMeta.duration = durationValue;
-    console.log('uploadMeta', uploadMeta);
+
 
     if (stopCallback) {
       clearTimeout(stopCallback.timeout);
@@ -108,16 +108,15 @@ async function uploadFileToServer(filePath, meta) {
   try {
     const form = new FormData();
     form.append('file', fs.createReadStream(filePath), path.basename(filePath));
-    if (meta.interactionId) {
+    
      
-      form.append('interactionId', meta.interactionId);
-      form.append('title', meta.interactionId);
-      form.append('description', meta.interactionId);
-    }
+      form.append('interactionId', meta?.interactionId || '');
+      form.append('title', meta?.title || 'Screen Recording');
+      form.append('description', meta?.description || 'Screen recording uploaded from Electron app');
+    
     // Add the recording duration if present
     if (meta.duration) {
       form.append('duration', meta.duration);
-      console.log('Duration in server', meta.duration);
     }
     const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
     const headers = {
@@ -126,10 +125,8 @@ async function uploadFileToServer(filePath, meta) {
     // Use authToken from store if it exists, otherwise use meta.token
     const store = await storePromise;
     const storedToken = store.get('authToken');
-    console.log("Stored Token", storedToken)
     const storedUrl = store.get('setting')?.videourl || meta.url;
 
-    // console.log("Store Data ", storedToken, storedUrl)
     if (storedToken) {
       headers['Authorization'] = `Bearer ${storedToken}`;
     } else if (meta.token) {
@@ -144,7 +141,7 @@ async function uploadFileToServer(filePath, meta) {
     if (!response.ok) {
       console.error('File upload failed:', response.statusText);
     } else {
-      console.log('File uploaded successfully');
+
       const responseData = await response.json();
       console.log('Upload response:', responseData);
     }

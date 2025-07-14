@@ -139,9 +139,9 @@ if (loginForm) {
         throw new Error('Token not found in response');
       }
     } catch (error) {
-      alert('Login error: ' + error.message+ savedSettings?.loginurl);
+      alert('Login error: ' + error.message);
     }finally{
-      alert(savedSettings);
+ //
     }
   });
 }
