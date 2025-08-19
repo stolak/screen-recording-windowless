@@ -42,12 +42,31 @@
           <th>Date</th>
           <th>Duration (s)</th>
           <th>Path</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="recordings-list">
         <!-- Recordings will be inserted here -->
       </tbody>
     </table>
+
+    <!-- Modal -->
+    <div class="modal fade" id="playModal" tabindex="-1" aria-labelledby="playModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="playModalLabel">Play Recording</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <video id="recordingPlayer" width="100%" height="400" controls>
+              <source id="recordingSource" src="" type="video/webm">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <script>
     async function loadRecordings() {
@@ -64,12 +83,39 @@
             <td style="max-width:200px;overflow-x:auto;white-space:nowrap;">
               <span title="${rec.path}">${rec.path}</span>
             </td>
+            <td>
+              <button class="btn btn-primary btn-sm play-btn" data-path="${rec.path}" data-filename="${rec.filename}">Play</button>
+              <button class="btn btn-danger btn-sm delete-btn" data-id="${rec.id}">Delete</button>
+            </td>
           `;
           tbody.appendChild(tr);
         });
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this recording?')) {
+              await window.electronAPI.deleteRecordingById(id);
+              loadRecordings();
+            }
+          });
+        });
+        // Add event listeners for play buttons
+        document.querySelectorAll('.play-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const filePath = e.target.getAttribute('data-path');
+            // For local files, use the file:// protocol
+            const videoSrc = filePath.startsWith('file://') ? filePath : `file://${filePath}`;
+            document.getElementById('recordingSource').src = videoSrc;
+            const player = document.getElementById('recordingPlayer');
+            player.load();
+            const modal = new bootstrap.Modal(document.getElementById('playModal'));
+            modal.show();
+          });
+        });
       } else {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="4" class="text-center">No recordings found.</td>';
+        tr.innerHTML = '<td colspan="5" class="text-center">No recordings found.</td>';
         tbody.appendChild(tr);
       }
     }

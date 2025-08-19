@@ -11,7 +11,23 @@ let storePromise = (async () => {
 })();
 
 let mainWindow;
+let backgroundWindow;
 let lastRecordingDuration = null;
+
+function createBackgroundWindow() {
+  backgroundWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      devTools: false,
+    },
+  });
+  backgroundWindow.loadFile('index.html');
+  // backgroundWindow.close()
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -26,7 +42,7 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
-  startServer(mainWindow, () => lastRecordingDuration);
+  startServer(mainWindow, getBackgroundWindow, () => lastRecordingDuration);
 
   // Set up menu
   const menuTemplate = [
@@ -76,13 +92,17 @@ function createWindow() {
   Menu.setApplicationMenu(menu);
 }
 
+function getBackgroundWindow() {
+  return backgroundWindow;
+}
+
 ipcMain.handle('electron:get-desktop-sources', async () => {
   return await desktopCapturer.getSources({ types: ['screen'] });
 });
 
 ipcMain.handle('electron:save-recording', async (_event, { arrayBuffer, filename, savePath }) => {
   const buffer = Buffer.from(arrayBuffer);
-  const recordingsDir = savePath || path.join(os.homedir(), 'Desktop');
+  const recordingsDir = savePath || path.join(process.cwd(), 'recorded_screen');
 
   // Ensure the directory exists
   try {
@@ -157,8 +177,18 @@ async function getRecordingById(id) {
 async function deleteRecordingById(id) {
   const store = await storePromise;
   let recordings = store.get('recordings', []);
+  const toDelete = recordings.find(r => r.id === id);
   recordings = recordings.filter(r => r.id !== id);
   store.set('recordings', recordings);
+  // Unlink the file if it exists
+  if (toDelete && toDelete.path) {
+    try {
+      await fs.promises.unlink(toDelete.path);
+      console.log('Deleted file:', toDelete.path);
+    } catch (err) {
+      console.warn('Could not delete file:', toDelete.path, err.message);
+    }
+  }
 }
 
 async function getAllRecordings() {
@@ -196,6 +226,7 @@ ipcMain.handle('electron:get-login-url', async () => {
 });
 
 app.whenReady().then(() => {
+  createBackgroundWindow();
   createWindow();
 
   // Enable auto-launch on login
@@ -210,5 +241,11 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  //  backgroundWindow.close();
+  if (backgroundWindow) {
+    backgroundWindow.close();
+  }
   if (process.platform !== 'darwin') app.quit();
 });
+
+module.exports = { startServer, getBackgroundWindow };

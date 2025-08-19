@@ -16,7 +16,7 @@ let savedPath = null;
 let stopCallback = null;
 let uploadMeta = {};
 
-function startServer(mainWindow, getDuration) {
+function startServer(mainWindow, getBackgroundWindow, getDuration) {
   const app = express();
   app.use(cors()); 
   app.use(express.json());
@@ -27,7 +27,8 @@ function startServer(mainWindow, getDuration) {
     const { filename, path: savePath } = req.body;
    
 
-    mainWindow.webContents.send('start-recording', { filename, savePath });
+    const bgWindow = getBackgroundWindow();
+    bgWindow.webContents.send('start-recording', { filename, savePath });
     isRecording = true;
     savedPath = null;
     res.json({ status: 'started' });
@@ -48,7 +49,8 @@ console.log("preparing to stop")
     };
 
     
-    mainWindow.webContents.send('stop-recording');
+    const bgWindow = getBackgroundWindow();
+    bgWindow.webContents.send('stop-recording');
 
     const timeout = setTimeout(() => {
       if (stopCallback) {
