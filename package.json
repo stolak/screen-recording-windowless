@@ -1,5 +1,5 @@
 {
-  "name": "windowless",
+  "name": "screen-recorder",
   "version": "1.0.1",
   "main": "main.js",
   "description": "Automatic screen recording and uploading to a server",
@@ -7,9 +7,9 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "build-window": "electron-packager . windowless --platform=win32 --arch=x64 --out=dist --overwrite",
-    "build-mac": "electron-packager . windowless --platform=darwin --arch=x64 --out=dist --overwrite",
-    "build-linux": "electron-packager . windowless --platform=linux --arch=x64 --out=dist --overwrite"
+    "build-window": "electron-packager . screen-recorder --platform=win32 --arch=x64 --out=dist --overwrite",
+    "build-mac": "electron-packager . screen-recorder --platform=darwin --arch=x64 --out=dist --overwrite",
+    "build-linux": "electron-packager . screen-recorder --platform=linux --arch=x64 --out=dist --overwrite"
   },
   "dependencies": {
     "cors": "^2.8.5",
