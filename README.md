@@ -18,6 +18,19 @@ A cross-platform Electron application for automatic screen recording and secure 
 
 ---
 
+## Environment Variables
+
+You can configure the login endpoint using an environment variable. Create a `.env` file in your project root (or use the sample below):
+
+```env
+# The login endpoint for user authentication
+LOGIN_URL=http://localhost:3000/api/auth/signin
+```
+
+If not set, the app will use the value from settings or fall back to the default.
+
+---
+
 ## Installation
 
 ### Prerequisites

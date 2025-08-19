@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { app, BrowserWindow, ipcMain, desktopCapturer, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -131,6 +132,20 @@ ipcMain.handle('electron:set-store-value', async (_event, key, value) => {
   const store = await storePromise;
   store.set(key, value);
   return true;
+});
+
+const getLoginUrl = async () => {
+  const store = await storePromise;
+  console.log(process.env.LOGIN_URL)
+  return (
+    store.get('setting')?.loginurl||
+    process.env.LOGIN_URL ||
+    'http://localhost:3000/api/auth/signin'
+  );
+};
+
+ipcMain.handle('electron:get-login-url', async () => {
+  return await getLoginUrl();
 });
 
 app.whenReady().then(() => {

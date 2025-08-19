@@ -129,10 +129,10 @@ if (loginForm) {
     event.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    const savedSettings = await window.electronAPI.getStoreValue('setting');
-    console.log("Debugging 5", savedSettings);
+    const loginUrl = await window.electronAPI.getLoginUrl();
+    console.log("loginUrl",loginUrl)
     try {
-      const response = await fetch(savedSettings?.loginurl || 'http://localhost:3002/api/auth/signin', {
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

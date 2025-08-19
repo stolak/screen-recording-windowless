@@ -17,4 +17,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStoreValue: (key) => ipcRenderer.invoke('electron:get-store-value', key),
   setStoreValue: (key, value) => ipcRenderer.invoke('electron:set-store-value', key, value),
   sendRecordingStopped: (data) => ipcRenderer.send('recording-stopped', data),
+  getLoginUrl: () => ipcRenderer.invoke('electron:get-login-url'),
 });
