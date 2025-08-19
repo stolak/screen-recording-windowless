@@ -1,10 +1,17 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer } = require('electron');
+require('dotenv').config();
+const { app, BrowserWindow, ipcMain, desktopCapturer, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { startServer } = require('./server');
+let Store;
+let storePromise = (async () => {
+  Store = (await import('electron-store')).default;
+  return new Store();
+})();
 
 let mainWindow;
+let lastRecordingDuration = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -14,11 +21,53 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
+      devTools: true,
     },
   });
 
   mainWindow.loadFile('index.html');
-  startServer(mainWindow);
+  startServer(mainWindow, () => lastRecordingDuration);
+
+  // Set up menu
+  const menuTemplate = [
+    {
+      label: 'Home',
+      click: () => {
+        mainWindow.loadFile('index.html');
+      },
+    },
+    {
+      label: 'Settings',
+      click: async () => {
+        const store = await storePromise;
+        // const savedUrl = store.get('url');
+        const savedSettings = store.get('setting');
+        console.log('clelelelelSaved URL:', savedSettings);
+        if (savedSettings) {
+          console.log('Loading settings with saved URL:', savedSettings);
+          mainWindow.loadFile('settings.html', { query: savedSettings });
+        } else {
+          mainWindow.loadFile('settings.html');
+        }
+      },
+    },
+    ,
+  {
+    label: 'Debug',
+    submenu: [
+      {
+        label: 'Toggle Developer Tools',
+        accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+        click: () => {
+          mainWindow.webContents.toggleDevTools();
+        },
+      },
+      { role: 'reload' },
+    ],
+  },
+  ];
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 }
 
 ipcMain.handle('electron:get-desktop-sources', async () => {
@@ -49,4 +98,70 @@ ipcMain.handle('electron:save-recording', async (_event, { arrayBuffer, filename
   }
 });
 
-app.whenReady().then(createWindow);
+ipcMain.handle('electron:set-token', async (_event, token) => {
+  const store = await storePromise;
+  store.set('authToken', token);
+  console.log('Token set:', token);
+  return true;
+});
+
+ipcMain.handle('electron:set-url', async (_event, url) => {
+  const store = await storePromise;
+  store.set('url', url);
+  console.log('URL set:', url);
+  return true;
+});
+
+ipcMain.handle('electron:set-setting', async (_event, setting) => {
+  const store = await storePromise;
+  store.set('setting', setting);
+  console.log('setting set:', setting);
+  return true;
+});
+
+ipcMain.on('recording-stopped', (_event, data) => {
+  console.log('Received duration:', data.duration);
+  lastRecordingDuration = data.duration;
+});
+ipcMain.handle('electron:get-store-value', async (_event, key) => {
+  const store = await storePromise;
+  return store.get(key);
+});
+
+ipcMain.handle('electron:set-store-value', async (_event, key, value) => {
+  const store = await storePromise;
+  store.set(key, value);
+  return true;
+});
+
+const getLoginUrl = async () => {
+  const store = await storePromise;
+  console.log(process.env.LOGIN_URL)
+  return (
+    store.get('setting')?.loginurl||
+    process.env.LOGIN_URL ||
+    'http://localhost:3000/api/auth/signin'
+  );
+};
+
+ipcMain.handle('electron:get-login-url', async () => {
+  return await getLoginUrl();
+});
+
+app.whenReady().then(() => {
+  createWindow();
+
+  // Enable auto-launch on login
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    path: app.getPath('exe'), // Only needed for Windows
+  });
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});

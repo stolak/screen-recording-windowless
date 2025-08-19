@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+     
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .settings-container {
+      background: #fff;
+      padding: 2.5rem 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      min-width: 340px;
+    }
+    .settings-title {
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #343a40;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-title">Settings</div>
+    <form id="settings-form">
+      <div class="mb-3">
+        <label for="loginurl" class="form-label">Login Endpoint URL</label>
+        <input type="text" id="loginurl" name="loginurl" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="videourl" class="form-label">Image Endpoint URL</label>
+        <input type="text" id="videourl" name="videourl" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-success w-100">Save</button>
+    </form>
+  </div>
+  <script>
+    // On page load, set the #url input value from the query string if present
+    const params = new URLSearchParams(window.location.search);
+    const videourl = params.get('videourl');
+    const loginurl = params.get('loginurl');
+    if (videourl) {
+      document.getElementById('videourl').value = videourl;
+    }
+     if (loginurl) {
+      document.getElementById('loginurl').value = loginurl;
+    }
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const setting= {
+        loginurl: document.getElementById('loginurl').value,
+        videourl: document.getElementById('videourl').value
+      };
+      // const url = document.getElementById('url').value;
+      await window.electronAPI.setSetting(setting);
+      alert('Setting saved!');
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
