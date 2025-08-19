@@ -80,32 +80,40 @@ window.electronAPI.onStartRecording(async (_event, options) => {
       const blob = new Blob(recordedChunks, { type: 'video/webm' });
       const arrayBuffer = await blob.arrayBuffer();
 
+      const filePath = await window.electronAPI.saveRecording({
+        arrayBuffer,
+        ...recordingOptions,
+      });
+
+      if (filePath) {
+        console.log('[Recorder] Saved to:', filePath);
+        window.electronAPI.sendSavedPath(filePath);
+        // Save recording info to DB
+        const id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : (Date.now().toString());
+        await window.electronAPI.addRecording({
+          id,
+          filename: recordingOptions.filename,
+          path: filePath,
+          date: new Date().toISOString(),
+          duration: recordingDuration,
+        });
+      } else {
+        console.error('[Recorder] Failed to save file.');
+      }
       if (recordingStartTime) {
         recordingDuration = Math.floor((Date.now() - recordingStartTime) / 1000);
         console.log('Recording duration (seconds):', recordingDuration);
         window.electronAPI.sendRecordingStopped({ duration: recordingDuration });
-      }
-
-      // Wait a tick to ensure main process receives duration before saving
-      setTimeout(async () => {
-        const filePath = await window.electronAPI.saveRecording({
-          arrayBuffer,
-          ...recordingOptions,
-        });
-
-        if (filePath) {
-          console.log('[Recorder] Saved to:', filePath);
-          window.electronAPI.sendSavedPath(filePath);
-        } else {
-          console.error('[Recorder] Failed to save file.');
-        }
         // Display duration on the home page
         let durationMsg = document.getElementById('recording-duration-msg');
-        if (durationMsg) {
-          durationMsg.textContent = `Your last screen recording is ${recordingDuration} seconds`;
-          durationMsg.style.display = 'block';
+        if (!durationMsg) {
+          durationMsg = document.createElement('div');
+          durationMsg.id = 'recording-duration-msg';
+          durationMsg.style.marginTop = '20px';
+          document.body.appendChild(durationMsg);
         }
-      }, 50); // 50ms delay to ensure duration is set in main process
+        durationMsg.textContent = `Your last screen recording is ${recordingDuration} seconds`;
+      }
     };
 
     mediaRecorder.start();

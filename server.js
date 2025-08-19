@@ -36,7 +36,7 @@ function startServer(mainWindow, getDuration) {
   app.post('/stop', (req, res) => {
     if (!isRecording) return res.status(400).json({ error: 'Not recording' });
     if (stopCallback) return res.status(429).json({ error: 'A stop request is already in progress.' });
-
+console.log("preparing to stop")
     // Store interactionId and token for upload
     uploadMeta = {
       interactionId: req.body.interactionId,

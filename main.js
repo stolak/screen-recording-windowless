@@ -51,6 +51,12 @@ function createWindow() {
         }
       },
     },
+    {
+      label: 'Recordings',
+      click: () => {
+        mainWindow.loadFile('recordings.html');
+      },
+    },
     ,
   {
     label: 'Debug',
@@ -132,6 +138,47 @@ ipcMain.handle('electron:set-store-value', async (_event, key, value) => {
   const store = await storePromise;
   store.set(key, value);
   return true;
+});
+
+// --- Recording CRUD helpers ---
+async function addRecording(recording) {
+  const store = await storePromise;
+  const recordings = store.get('recordings', []);
+  recordings.push(recording);
+  store.set('recordings', recordings);
+}
+
+async function getRecordingById(id) {
+  const store = await storePromise;
+  const recordings = store.get('recordings', []);
+  return recordings.find(r => r.id === id);
+}
+
+async function deleteRecordingById(id) {
+  const store = await storePromise;
+  let recordings = store.get('recordings', []);
+  recordings = recordings.filter(r => r.id !== id);
+  store.set('recordings', recordings);
+}
+
+async function getAllRecordings() {
+  const store = await storePromise;
+  return store.get('recordings', []);
+}
+
+ipcMain.handle('electron:add-recording', async (_event, recording) => {
+  await addRecording(recording);
+  return true;
+});
+ipcMain.handle('electron:get-recording-by-id', async (_event, id) => {
+  return await getRecordingById(id);
+});
+ipcMain.handle('electron:delete-recording-by-id', async (_event, id) => {
+  await deleteRecordingById(id);
+  return true;
+});
+ipcMain.handle('electron:get-all-recordings', async () => {
+  return await getAllRecordings();
 });
 
 const getLoginUrl = async () => {
