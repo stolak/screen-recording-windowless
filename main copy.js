@@ -72,7 +72,7 @@ function createWindow() {
           click: () => {
             mainWindow.loadURL(process.env.NODE_ENV === 'development' 
               ? 'http://localhost:5173/home' 
-              : `http://localhost:5173/home/home`
+              : `file://${path.join(__dirname, 'build', 'index.html')}#/home`
             );
           },
         },
@@ -81,7 +81,7 @@ function createWindow() {
           click: () => {
             mainWindow.loadURL(process.env.NODE_ENV === 'development' 
               ? 'http://localhost:5173/settings' 
-              : `http://localhost:5173/home/settings`
+              : `file://${path.join(__dirname, 'build', 'index.html')}#/settings`
             );
           },
         },
@@ -90,7 +90,7 @@ function createWindow() {
           click: () => {
             mainWindow.loadURL(process.env.NODE_ENV === 'development' 
               ? 'http://localhost:5173/recordings' 
-              : `http://localhost:5173/home/recordings`
+              : `file://${path.join(__dirname, 'build', 'index.html')}#/recordings`
             );
           },
         },
