@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Recording } from '../electron/preload';
 
 const Recordings: React.FC = () => {
@@ -10,6 +10,7 @@ const Recordings: React.FC = () => {
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const prevRecording = useRef(false);
 
   const toFileUrl = (p: string) => encodeURI(`file:///${p.replace(/\\/g, '/')}`);
 
@@ -20,6 +21,31 @@ const Recordings: React.FC = () => {
   useEffect(() => {
     filterAndSortRecordings();
   }, [recordings, searchQuery, sortDesc]);
+
+  // Poll server /status so UI reflects actual recording state regardless of source
+  useEffect(() => {
+    let isMounted = true;
+    const poll = async () => {
+      try {
+        const res = await fetch('http://localhost:4571/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isMounted) return;
+        const current = Boolean(data.recording);
+        // Detect transition from recording -> idle and refresh list shortly after
+        if (prevRecording.current && !current) {
+          setTimeout(loadRecordings, 1500);
+        }
+        prevRecording.current = current;
+        setIsRecording(current);
+      } catch (e) {
+        // ignore transient errors
+      }
+    };
+    const id = setInterval(poll, 1500);
+    poll();
+    return () => { isMounted = false; clearInterval(id); };
+  }, []);
 
   const loadRecordings = async () => {
     try {
@@ -112,11 +138,17 @@ const Recordings: React.FC = () => {
   };
 
   const formatDuration = (seconds: number): string => {
-    if (!seconds) return '0:00';
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    if (!seconds) return "0:00";
+  
+    // round total seconds to nearest integer
+    const totalSeconds = Math.round(seconds);
+  
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+  
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
+  
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -136,7 +168,8 @@ const Recordings: React.FC = () => {
     return {
       total: recordings.length,
       durationFormatted: formatDuration(totalDuration),
-      long: longRecordings
+      averageDurationFormatted: formatDuration(totalDuration / recordings.length),
+    
     };
   };
 
@@ -188,8 +221,8 @@ const Recordings: React.FC = () => {
           <div className="text-gray-600">Total Duration</div>
         </div>
         <div className="card text-center">
-          <div className="text-3xl font-bold text-primary-600">{stats.long}</div>
-          <div className="text-gray-600">Long Recordings</div>
+          <div className="text-3xl font-bold text-primary-600">{stats.averageDurationFormatted}</div>
+          <div className="text-gray-600">Average Duration</div>
         </div>
       </div>
 
