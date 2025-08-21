@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { app, BrowserWindow, ipcMain, desktopCapturer, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, Menu, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -26,7 +26,7 @@ function createBackgroundWindow() {
       devTools: false,
     },
   });
-  
+  backgroundWindow.loadURL('http://localhost:5173');
   // Load the React app in background window
   // if (process.env.NODE_ENV === 'development') {
   //   console.log('Loading background window in development mode');
@@ -138,7 +138,12 @@ ipcMain.handle('electron:save-recording', async (_event, { arrayBuffer, filename
     return null;
   }
 
-  const finalFilename = filename.endsWith('.webm') ? filename : `${filename}.webm`;
+  // Ensure we have a safe filename
+  const ts = new Date();
+  const pad = (n) => n.toString().padStart(2, '0');
+  const defaultBase = `recording-${ts.getFullYear()}${pad(ts.getMonth() + 1)}${pad(ts.getDate())}-${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}`;
+  const baseName = (typeof filename === 'string' && filename.trim()) ? filename.trim() : defaultBase;
+  const finalFilename = baseName.endsWith('.webm') ? baseName : `${baseName}.webm`;
   const filePath = path.join(recordingsDir, finalFilename);
 
   try {
@@ -189,6 +194,8 @@ ipcMain.handle('electron:set-store-value', async (_event, key, value) => {
 
 // Recording CRUD helpers
 async function addRecording(recording) {
+
+  console.log('Adding recording:', recording);
   const store = await storePromise;
   const recordings = store.get('recordings', []);
   recordings.push(recording);
@@ -220,6 +227,7 @@ async function deleteRecordingById(id) {
 }
 
 async function getAllRecordings() {
+  console.log('Getting all recordings....');
   const store = await storePromise;
   return store.get('recordings', []);
 }
@@ -259,6 +267,19 @@ ipcMain.handle('electron:get-login-url', async () => {
 // App lifecycle
 app.whenReady().then(() => {
   console.log('App is ready');
+
+  // Register custom protocol to serve local media files to the renderer
+  protocol.registerFileProtocol('media', (request, callback) => {
+    try {
+      const url = request.url.slice('media://'.length);
+      const filePath = decodeURIComponent(url);
+      callback({ path: filePath });
+    } catch (e) {
+      console.error('media protocol error:', e);
+      callback({ path: '' });
+    }
+  });
+
   createBackgroundWindow();
   createWindow();
 

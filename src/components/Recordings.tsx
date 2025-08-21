@@ -9,6 +9,9 @@ const Recordings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const toFileUrl = (p: string) => encodeURI(`file:///${p.replace(/\\/g, '/')}`);
 
   useEffect(() => {
     loadRecordings();
@@ -26,6 +29,48 @@ const Recordings: React.FC = () => {
       console.error('Error loading recordings:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      const res = await fetch('http://localhost:4571/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: `recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`,
+          path: '',
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to start recording');
+      setIsRecording(true);
+    } catch (e) {
+      console.error(e);
+      alert('Could not start recording');
+    }
+  };
+
+  const handleStopRecording = async () => {
+    try {
+      const setting = await window.electronAPI.getStoreValue('setting');
+      const videoUrl = setting?.videourl || 'http://localhost:3004';
+      const token = await window.electronAPI.getStoreValue('authToken');
+      const res = await fetch('http://localhost:4571/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interactionId: `recording-${Date.now()}`,
+          token,
+          url: videoUrl,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to stop recording');
+      setIsRecording(false);
+      // Optionally refresh list shortly after stop to ensure new item appears
+      setTimeout(loadRecordings, 1500);
+    } catch (e) {
+      console.error(e);
+      alert('Could not stop recording');
     }
   };
 
@@ -87,9 +132,10 @@ const Recordings: React.FC = () => {
     const totalDuration = recordings.reduce((sum, r) => sum + (r.duration || 0), 0);
     const longRecordings = recordings.filter(r => (r.duration || 0) >= 60).length;
     
+    console.log('Total duration:', totalDuration);
     return {
       total: recordings.length,
-      duration: Math.floor(totalDuration / 60),
+      durationFormatted: formatDuration(totalDuration),
       long: longRecordings
     };
   };
@@ -113,6 +159,22 @@ const Recordings: React.FC = () => {
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Screen Recordings</h1>
         <p className="text-gray-600">Manage and view your recorded content</p>
+        <div className="items-center gap-3 w-full sm:w-auto mt-4">
+          <button
+            onClick={handleStartRecording}
+            disabled={isRecording}
+            className={`btn-primary ${isRecording ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isRecording ? 'Recording…' : 'Start Recording'}
+          </button>
+          <button
+            onClick={handleStopRecording}
+            disabled={!isRecording}
+            className={`btn-danger ${!isRecording ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            Stop Recording
+          </button>
+        </div>
       </div>
 
       {/* Statistics */}
@@ -122,7 +184,7 @@ const Recordings: React.FC = () => {
           <div className="text-gray-600">Total Recordings</div>
         </div>
         <div className="card text-center">
-          <div className="text-3xl font-bold text-primary-600">{stats.duration}m</div>
+          <div className="text-3xl font-bold text-primary-600">{stats.durationFormatted}</div>
           <div className="text-gray-600">Total Duration</div>
         </div>
         <div className="card text-center">
@@ -131,50 +193,55 @@ const Recordings: React.FC = () => {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <div className="relative max-w-sm w-full">
-          <input
-            type="text"
-            placeholder="Search recordings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
-          <svg
-            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </div>
+      {/* Recording Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         
-        <button
-          onClick={() => setSortDesc(!sortDesc)}
-          className="btn-secondary flex items-center gap-2"
-        >
-          <span>Sort by date</span>
-          <svg
-            className={`h-4 w-4 transition-transform ${sortDesc ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+
+        {/* Search and Sort */}
+       
+          <div className="relative max-w-sm w-full">
+            <input
+              type="text"
+              placeholder="Search recordings..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-          </svg>
-        </button>
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          
+          <button
+            onClick={() => setSortDesc(!sortDesc)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <span>Sort by date</span>
+            <svg
+              className={`h-4 w-4 transition-transform ${sortDesc ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+              />
+            </svg>
+          </button>
+        
       </div>
 
       {/* Recordings Grid */}
@@ -263,7 +330,7 @@ const Recordings: React.FC = () => {
               <video
                 controls
                 className="w-full h-auto max-h-[60vh] rounded-lg"
-                src={`file://${selectedRecording.path}`}
+                src={`media://${selectedRecording.path}`}
               >
                 Your browser does not support the video tag.
               </video>
@@ -271,7 +338,7 @@ const Recordings: React.FC = () => {
               <div className="mt-4 text-sm text-gray-600">
                 <p><strong>Duration:</strong> {formatDuration(selectedRecording.duration)}</p>
                 <p><strong>Date:</strong> {new Date(selectedRecording.date).toLocaleString()}</p>
-                <p><strong>Path:</strong> {selectedRecording.path}</p>
+                <p><strong>Path:</strong> {toFileUrl(selectedRecording.path)}</p>
               </div>
             </div>
           </div>
