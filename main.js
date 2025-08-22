@@ -12,32 +12,8 @@ let storePromise = (async () => {
 })();
 
 let mainWindow;
-let backgroundWindow;
 let lastRecordingDuration = null;
 
-function createBackgroundWindow() {
-  backgroundWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    show: false,
-    webPreferences: {
-      contextIsolation: true,
-      preload: path.join(app.getAppPath(), 'src/electron/preload.js'),
-      devTools: false,
-    },
-  });
-  backgroundWindow.loadURL('http://localhost:5173');
-  // Load the React app in background window
-  // if (process.env.NODE_ENV === 'development') {
-  //   console.log('Loading background window in development mode');
-  //   backgroundWindow.loadURL('http://localhost:5173');
-  // } else {
-  //   console.log('Loading background window in production mode');
-
-  //   backgroundWindow.loadFile(path.join(__dirname, 'build', 'index.html'));
-
-  // }
-}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -47,20 +23,21 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       preload: path.join(app.getAppPath(), 'src/electron/preload.js'),
-      devTools: true,
+      devTools: true,//process.env.NODE_ENV === 'development',
     },
   });
-  mainWindow.loadURL('http://localhost:5173');
+ 
   // Load the React app
-  // if (process.env.NODE_ENV === 'development') {
-  //   mainWindow.loadURL('http://localhost:5173');
-  //   // Open DevTools in development
-  //   mainWindow.webContents.openDevTools();
-  // } else {
-  //   mainWindow.loadFile(path.join(__dirname, 'build', 'index.html'));
-  // }
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.loadURL('http://localhost:5173');
+    // Open DevTools in development
+    mainWindow.webContents.openDevTools();
+  } else {
+    console.log("loading file",path.join(__dirname, 'build', 'index.html'))
+    mainWindow.loadFile(path.join(__dirname, 'build', 'index.html'));
+  }
 
-  startServer(mainWindow, getBackgroundWindow, () => lastRecordingDuration);
+  startServer(mainWindow, getMainWindow, () => lastRecordingDuration);
 
   // Set up menu
   const menuTemplate = [
@@ -68,11 +45,11 @@ function createWindow() {
       label: 'File',
       submenu: [
         {
-          label: 'Home',
+          label: 'Homew',
           click: () => {
             mainWindow.loadURL(process.env.NODE_ENV === 'development' 
               ? 'http://localhost:5173/home' 
-              : `http://localhost:5173/home/home`
+              : `file://${path.join(__dirname, 'build', 'index.html')}#/home`
             );
           },
         },
@@ -81,7 +58,7 @@ function createWindow() {
           click: () => {
             mainWindow.loadURL(process.env.NODE_ENV === 'development' 
               ? 'http://localhost:5173/settings' 
-              : `http://localhost:5173/home/settings`
+              : `file://${path.join(__dirname, 'build', 'index.html')}#/settings`
             );
           },
         },
@@ -90,12 +67,13 @@ function createWindow() {
           click: () => {
             mainWindow.loadURL(process.env.NODE_ENV === 'development' 
               ? 'http://localhost:5173/recordings' 
-              : `http://localhost:5173/home/recordings`
+              : `file://${path.join(__dirname, 'build', 'index.html')}#/recordings`
             );
           },
         },
         { type: 'separator' },
         { role: 'quit' },
+        
       ],
     },
     {
@@ -117,8 +95,8 @@ function createWindow() {
   Menu.setApplicationMenu(menu);
 }
 
-function getBackgroundWindow() {
-  return backgroundWindow;
+function getMainWindow() {
+  return mainWindow;
 }
 
 // IPC handlers
@@ -280,7 +258,8 @@ app.whenReady().then(() => {
     }
   });
 
-  createBackgroundWindow();
+  
+  
   createWindow();
 
   // Enable auto-launch on login
@@ -295,10 +274,8 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (backgroundWindow) {
-    backgroundWindow.close();
-  }
+  
   if (process.platform !== 'darwin') app.quit();
 });
 
-module.exports = { startServer, getBackgroundWindow };
+module.exports = { startServer, getMainWindow };

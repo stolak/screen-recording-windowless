@@ -15,7 +15,6 @@ ipcRenderer.on('start-recording', async (_event, options) => {
       console.error('No desktop sources found.');
       return;
     }
-
     // Get video stream (desktop)
     const videoStream = await navigator.mediaDevices.getUserMedia({
       audio: false,
@@ -26,7 +25,6 @@ ipcRenderer.on('start-recording', async (_event, options) => {
         },
       },
     });
-
     // Try to get microphone audio, fallback to video-only
     let combinedStream;
     try {

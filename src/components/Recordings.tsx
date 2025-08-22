@@ -162,9 +162,7 @@ const Recordings: React.FC = () => {
 
   const getStats = () => {
     const totalDuration = recordings.reduce((sum, r) => sum + (r.duration || 0), 0);
-    const longRecordings = recordings.filter(r => (r.duration || 0) >= 60).length;
     
-    console.log('Total duration:', totalDuration);
     return {
       total: recordings.length,
       durationFormatted: formatDuration(totalDuration),

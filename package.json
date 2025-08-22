@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "electron": "cross-env NODE_ENV=development electron .",
+    "electron": "electron .",
     "electron-dev": "concurrently -k -r \"npm:dev\" \"npx wait-on --verbose tcp:5173 && cross-env NODE_ENV=development electron .\"",
     "electron-build": "npm run build && electron-builder",
     "build-win": "npm run build && electron-builder --win",
