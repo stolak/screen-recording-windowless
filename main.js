@@ -45,7 +45,7 @@ function createWindow() {
       label: 'File',
       submenu: [
         {
-          label: 'Homew',
+          label: 'Home',
           click: () => {
             mainWindow.loadURL(process.env.NODE_ENV === 'development' 
               ? 'http://localhost:5173/home' 

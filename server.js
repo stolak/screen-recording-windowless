@@ -27,7 +27,7 @@ function startServer(mainWindow, getBackgroundWindow, getDuration) {
     const { filename, path: savePath } = req.body;
    
 
-    const bgWindow = getBackgroundWindow();
+    const bgWindow = getBackgroundWindow();// can i make await here
     bgWindow.webContents.send('start-recording', { filename, savePath });
     isRecording = true;
     savedPath = null;

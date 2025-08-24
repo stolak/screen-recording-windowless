@@ -13,10 +13,15 @@
     "electron-build": "npm run build && electron-builder",
     "build-win": "npm run build && electron-builder --win",
     "build-mac": "npm run build && electron-builder --mac",
-    "build-linux": "npm run build && electron-builder --linux"
+    "build-linux": "npm run build && electron-builder --linux",
+    "electron-build-forge": "npm run build && electron-forge make",
+    "build-win-forge": "npm run build && electron-forge make --platform win32",
+    "build-mac-forge": "npm run build && electron-forge make --platform darwin",
+    "build-linux-forge": "npm run build && electron-forge make --platform linux"
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
     "electron-store": "^10.0.0",
     "express": "^4.18.2",
     "form-data": "^4.0.0",
@@ -35,6 +40,8 @@
     "cross-env": "^7.0.3",
     "electron": "^23.3.13",
     "electron-builder": "^24.3.0",
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-zip": "^7.2.0",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7",
     "typescript": "^4.9.5",
@@ -58,7 +65,23 @@
         "from": "build",
         "to": "build"
       }
-    ]
+    ]},
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "name": "Screen Recording Windowless",
+        "executableName": "screen-recording-windowless",
+
+        "asar": true,
+        "overwrite": true
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": ["win32"]
+        }
+      ]
+    }
   },
   "keywords": [
     "electron",
