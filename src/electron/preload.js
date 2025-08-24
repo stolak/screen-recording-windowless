@@ -89,6 +89,7 @@ ipcRenderer.on('start-recording', async (_event, options) => {
 
     recordingStartTime = Date.now();
     mediaRecorder.start();
+    ipcRenderer.send('recording-started');
   } catch (err) {
     console.error('Error starting recording (preload):', err);
   }
@@ -96,6 +97,7 @@ ipcRenderer.on('start-recording', async (_event, options) => {
 
 ipcRenderer.on('stop-recording', () => {
   try {
+    console.log("mediaRecorder", mediaRecorder)
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
     }
