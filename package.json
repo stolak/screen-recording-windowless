@@ -28,9 +28,12 @@
     "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.8.1"
+    "react-router-dom": "^6.8.1",
+    "sweetalert2": "^11.22.4"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-zip": "^7.2.0",
     "@types/node": "^18.15.11",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
@@ -40,8 +43,6 @@
     "cross-env": "^7.0.3",
     "electron": "^23.3.13",
     "electron-builder": "^24.3.0",
-    "@electron-forge/cli": "^7.2.0",
-    "@electron-forge/maker-zip": "^7.2.0",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7",
     "typescript": "^4.9.5",
@@ -65,20 +66,22 @@
         "from": "build",
         "to": "build"
       }
-    ]},
+    ]
+  },
   "config": {
     "forge": {
       "packagerConfig": {
         "name": "Screen Recording Windowless",
         "executableName": "screen-recording-windowless",
-
         "asar": true,
         "overwrite": true
       },
       "makers": [
         {
           "name": "@electron-forge/maker-zip",
-          "platforms": ["win32"]
+          "platforms": [
+            "win32"
+          ]
         }
       ]
     }

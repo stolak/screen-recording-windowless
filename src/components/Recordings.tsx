@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Swal from 'sweetalert2';
 import { Recording } from '../electron/preload';
 
 const Recordings: React.FC = () => {
@@ -116,13 +117,23 @@ const Recordings: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this recording?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'You won\'t be able to recover this recording!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+    });
+    if (result.isConfirmed) {
       try {
         await window.electronAPI.deleteRecordingById(id);
         await loadRecordings();
+        Swal.fire('Deleted!', 'Your recording has been deleted.', 'success');
       } catch (error) {
         console.error('Error deleting recording:', error);
-        alert('Error deleting recording');
+        Swal.fire('Error', 'Error deleting recording', 'error');
       }
     }
   };
