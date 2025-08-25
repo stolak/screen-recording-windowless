@@ -56,6 +56,23 @@ npm install sweetalert2
 
 ---
 
+## Major Dependencies
+
+- [Electron](https://www.electronjs.org/) – Desktop app framework
+- [React](https://reactjs.org/) – UI library
+- [SweetAlert2](https://sweetalert2.github.io/) – Modern confirmation dialogs
+- [Express](https://expressjs.com/) – REST API server
+- [electron-store](https://github.com/sindresorhus/electron-store) – Secure storage for settings and tokens
+- [Tailwind CSS](https://tailwindcss.com/) – Utility-first CSS framework
+
+All dependencies are listed in `package.json` and will be installed with:
+
+```sh
+npm install
+```
+
+---
+
 ## Usage
 
 ### Start the App (Development)
