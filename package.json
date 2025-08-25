@@ -1,27 +1,98 @@
 {
-  "name": "screen-recorder",
-  "version": "1.0.1",
+  "name": "screen-recording-windowless",
+  "version": "1.0.0",
+  "description": "Screen recording app with React, Electron, and TypeScript",
   "main": "main.js",
-  "description": "Automatic screen recording and uploading to a server",
-  "author": "Stephen Akinbobola",
+  "homepage": "./",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder",
-    "build-window": "electron-packager . screen-recorder --platform=win32 --arch=x64 --out=dist --overwrite",
-    "build-mac": "electron-packager . screen-recorder --platform=darwin --arch=x64 --out=dist --overwrite",
-    "build-linux": "electron-packager . screen-recorder --platform=linux --arch=x64 --out=dist --overwrite"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron-dev": "concurrently -k -r \"npm:dev\" \"npx wait-on --verbose tcp:5173 && cross-env NODE_ENV=development electron .\"",
+    "electron-build": "npm run build && electron-builder",
+    "build-win": "npm run build && electron-builder --win",
+    "build-mac": "npm run build && electron-builder --mac",
+    "build-linux": "npm run build && electron-builder --linux",
+    "electron-build-forge": "npm run build && electron-forge make",
+    "build-win-forge": "npm run build && electron-forge make --platform win32",
+    "build-mac-forge": "npm run build && electron-forge make --platform darwin",
+    "build-linux-forge": "npm run build && electron-forge make --platform linux"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "electron-store": "^10.1.0",
+    "electron-store": "^10.0.0",
     "express": "^4.18.2",
-    "form-data": "^4.0.3",
-    "node-fetch": "^3.3.2"
+    "form-data": "^4.0.0",
+    "node-fetch": "^3.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.1",
+    "sweetalert2": "^11.22.4"
   },
   "devDependencies": {
-    "electron": "^29.0.0",
-    "electron-builder": "^23.6.0",
-    "electron-packager": "^15.5.0"
-  }
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-zip": "^7.2.0",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^3.1.0",
+    "autoprefixer": "^10.4.14",
+    "concurrently": "^7.6.0",
+    "cross-env": "^7.0.3",
+    "electron": "^23.3.13",
+    "electron-builder": "^24.3.0",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.2.7",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.4",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.screenrecording.app",
+    "productName": "Screen Recording Windowless",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "server.js",
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build",
+        "to": "build"
+      }
+    ]
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "name": "Screen Recording Windowless",
+        "executableName": "screen-recording-windowless",
+        "asar": true,
+        "overwrite": true
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "win32"
+          ]
+        }
+      ]
+    }
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "typescript",
+    "screen-recording",
+    "desktop-app"
+  ],
+  "author": "Stephen Akinbobola",
+  "license": "MIT"
 }

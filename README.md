@@ -48,8 +48,10 @@ cd screen-recording
 
 ### Install Dependencies
 
+This project uses [SweetAlert2](https://sweetalert2.github.io/) for modern confirmation dialogs (e.g., when deleting a recording). Install it with:
+
 ```sh
-npm install
+npm install sweetalert2
 ```
 
 ---
@@ -133,6 +135,11 @@ screen-recording/
 ### Developer Tools
 
 - Toggle DevTools from the "Debug" menu or with `Ctrl+Shift+I`.
+
+### Modern Confirmation Dialogs
+
+- When deleting a recording, the app uses SweetAlert2 for a user-friendly confirmation dialog instead of the default browser `window.confirm`.
+- This provides a more attractive and consistent user experience.
 
 ---
 

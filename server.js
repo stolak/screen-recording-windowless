@@ -15,19 +15,29 @@ let isRecording = false;
 let savedPath = null;
 let stopCallback = null;
 let uploadMeta = {};
+let recordingStartedResolve;
+let recordingStartedPromise = null;
 
-function startServer(mainWindow, getDuration) {
+function startServer(mainWindow, getBackgroundWindow, getDuration) {
   const app = express();
   app.use(cors()); 
   app.use(express.json());
 
-  app.post('/start', (req, res) => {
+  app.post('/start', async (req, res) => {
     if (isRecording) return res.status(400).json({ error: 'Already recording' });
 
     const { filename, path: savePath } = req.body;
-   
 
-    mainWindow.webContents.send('start-recording', { filename, savePath });
+    // Set up handshake promise
+    recordingStartedPromise = new Promise((resolve) => {
+      recordingStartedResolve = resolve;
+    });
+
+    const bgWindow = getBackgroundWindow();
+    bgWindow.webContents.send('start-recording', { filename, savePath });
+
+    // Wait for handshake from renderer
+    await recordingStartedPromise;
     isRecording = true;
     savedPath = null;
     res.json({ status: 'started' });
@@ -36,7 +46,7 @@ function startServer(mainWindow, getDuration) {
   app.post('/stop', (req, res) => {
     if (!isRecording) return res.status(400).json({ error: 'Not recording' });
     if (stopCallback) return res.status(429).json({ error: 'A stop request is already in progress.' });
-
+    console.log("preparing to stop")
     // Store interactionId and token for upload
     uploadMeta = {
       interactionId: req.body.interactionId,
@@ -48,7 +58,8 @@ function startServer(mainWindow, getDuration) {
     };
 
     
-    mainWindow.webContents.send('stop-recording');
+    const bgWindow = getBackgroundWindow();
+    bgWindow.webContents.send('stop-recording');
 
     const timeout = setTimeout(() => {
       if (stopCallback) {
@@ -94,6 +105,14 @@ function startServer(mainWindow, getDuration) {
     uploadFileToServer(filePath, uploadMeta).catch(err => {
       console.error('Background upload error:', err);
     });
+  });
+
+  // Listen for handshake from renderer
+  ipcMain.on('recording-started', () => {
+    if (recordingStartedResolve) {
+      recordingStartedResolve();
+      recordingStartedResolve = null;
+    }
   });
 
   const PORT = 4571;
