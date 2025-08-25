@@ -83,17 +83,33 @@ npm run build-linux
 ## Project Structure
 
 ```
-screen-recording/
-├── index.html           # Home/login page
-├── settings.html        # Settings page for API endpoints
-├── main.js              # Electron main process (window, menu, IPC, server)
-├── preload.js           # Secure context bridge for renderer <-> main
-├── renderer.js          # Renderer process (UI logic, recording, login)
-├── server.js            # Express server for REST API and upload logic
-├── src/
-│   ├── recorder.js      # (Optional) Additional recording logic
-│   └── server.js        # (Optional) Additional server logic
+screen-recording-windowless/
+├── index.html
+├── main.js                # Electron main process (window, menu, IPC, server)
+├── preload.js             # Preload script for Electron (context bridge)
+├── server.js              # Express server for REST API and upload logic
 ├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.ts
+├── public/
+│   └── index.html
+├── src/
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── components/
+│   │   ├── Home.tsx
+│   │   ├── Navigation.tsx
+│   │   ├── Recordings.tsx
+│   │   └── Settings.tsx
+│   └── electron/
+│       ├── preload.js
+│       └── preload.ts
+├── recorded_screen/       # Saved recordings
 └── ...
 ```
 
@@ -135,11 +151,6 @@ screen-recording/
 ### Developer Tools
 
 - Toggle DevTools from the "Debug" menu or with `Ctrl+Shift+I`.
-
-### Modern Confirmation Dialogs
-
-- When deleting a recording, the app uses SweetAlert2 for a user-friendly confirmation dialog instead of the default browser `window.confirm`.
-- This provides a more attractive and consistent user experience.
 
 ---
 
